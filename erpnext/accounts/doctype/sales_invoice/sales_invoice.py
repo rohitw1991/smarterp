@@ -17,6 +17,7 @@ from frappe.model.mapper import get_mapped_doc
 from erpnext.controllers.recurring_document import *
 
 from erpnext.controllers.selling_controller import SellingController
+from tools.tools_management.custom_methods import get_merchandise_item_details, get_item_details
 
 form_grid_templates = {
 	"entries": "templates/form_grid/item_grid.html"
@@ -71,9 +72,7 @@ class SalesInvoice(SellingController):
 			self.is_opening = 'No'
 
 		self.set_aging_date()
-
 		frappe.get_doc("Account", self.debit_to).validate_due_date(self.posting_date, self.due_date)
-
 		self.set_against_income_account()
 		self.validate_c_form()
 		self.validate_time_logs_are_submitted()
@@ -103,6 +102,7 @@ class SalesInvoice(SellingController):
 		if not cint(self.is_pos) == 1:
 			self.update_against_document_in_jv()
 
+		self.update_c_form()
 		self.update_time_log_batch(self.name)
 		convert_to_recurring(self, "RECINV.#####", self.posting_date)
 
@@ -121,7 +121,6 @@ class SalesInvoice(SellingController):
 		self.update_status_updater_args()
 		self.update_prevdoc_status()
 		self.update_billing_status_for_zero_amount_refdoc("Sales Order")
-		self.validate_c_form_on_cancel()
 
 		self.make_gl_entries_on_cancel()
 
@@ -148,10 +147,6 @@ class SalesInvoice(SellingController):
 	def on_update_after_submit(self):
 		validate_recurring_document(self)
 		convert_to_recurring(self, "RECINV.#####", self.posting_date)
-
-	def before_recurring(self):
-		self.aging_date = None
-		self.due_date = None
 
 	def get_portal_page(self):
 		return "invoice" if self.docstatus==1 else None
@@ -382,12 +377,6 @@ class SalesInvoice(SellingController):
 
 			frappe.db.set(self, 'c_form_no', '')
 
-	def validate_c_form_on_cancel(self):
-		""" Display message if C-Form no exists on cancellation of Sales Invoice"""
-		if self.c_form_applicable == 'Yes' and self.c_form_no:
-			msgprint(_("Please remove this Invoice {0} from C-Form {1}")
-				.format(self.name, self.c_form_no), raise_exception = 1)
-
 	def update_current_stock(self):
 		for d in self.get('entries'):
 			if d.item_code and d.warehouse:
@@ -595,6 +584,24 @@ class SalesInvoice(SellingController):
 						"cost_center": self.write_off_cost_center
 					})
 				)
+
+	def update_c_form(self):
+		"""Update amended id in C-form"""
+		if self.c_form_no and self.amended_from:
+			frappe.db.sql("""update `tabC-Form Invoice Detail` set invoice_no = %s,
+				invoice_date = %s, territory = %s, net_total = %s,
+				grand_total = %s where invoice_no = %s and parent = %s""",
+				(self.name, self.amended_from, self.c_form_no))
+
+	def get_details(self, item):
+		if item:
+			get_item_details(self,item)
+			return "Done"
+
+	def get_merchandise_details(self,item):
+		if item:
+			get_merchandise_item_details(self,item)
+			return "Done"
 
 @frappe.whitelist()
 def get_bank_cash_account(mode_of_payment):

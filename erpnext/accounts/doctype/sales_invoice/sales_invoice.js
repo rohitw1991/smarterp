@@ -434,4 +434,99 @@ cur_frm.cscript.send_sms = function() {
 	frappe.require("assets/erpnext/js/sms_manager.js");
 	var sms_man = new SMSManager(cur_frm.doc);
 }
+//Rohit
 
+cur_frm.cscript.validate = function(doc, cdt, cdn){
+setTimeout(function(){
+refresh_field(['entries','net_total_export','grand_total_export','outstanding_amount','rounded_total_export','in_words_export']);
+},1000)
+}
+//for tailoring products
+cur_frm.cscript.tailoring_item_code = function(doc, cdt, cdn){
+var d = locals[cdt][cdn]
+get_server_fields('get_details',d.tailoring_item_code,'',doc, cdt, cdn, 1 , function(doc, cdt, cdn){
+refresh_field('sales_invoice_items_one')
+})
+}
+cur_frm.cscript.tailoring_qty = function(doc, cdt, cdn){
+cur_frm.cscript.calculate_tailoring_amount(doc, cdt, cdn);
+}	
+cur_frm.cscript.tailoring_rate = function(doc, cdt, cdn){
+cur_frm.cscript.calculate_tailoring_amount(doc, cdt, cdn);
+}
+cur_frm.cscript.tailoring_discount_percentage = function(doc, cdt, cdn){
+cur_frm.cscript.calculate_tailoring_amount(doc, cdt, cdn);	
+}
+cur_frm.cscript.calculate_tailoring_amount = function(doc, cdt, cdn){
+var d = locals[cdt][cdn]
+if(d.tailoring_discount_percentage == 100.0)
+{
+d.tailoring_amount = 0	
+}
+else
+{
+if(d.tailoring_discount_percentage)
+{
+d.tailoring_amount = flt(d.tailoring_rate * (1.0 - (flt(d.tailoring_discount_percentage) / 100.0))*d.tailoring_qty)
+}
+else{
+d.tailoring_amount = flt(flt(d.tailoring_rate) *flt(d.tailoring_qty))
+}
+}
+refresh_field('sales_invoice_items_one')
+cur_frm.cscript.calculate_net_total(doc, cdt, cdn)
+}
+//for merchandise products
+cur_frm.cscript.merchandise_item_code = function(doc, cdt, cdn){
+var d = locals[cdt][cdn]
+get_server_fields('get_merchandise_details',d.merchandise_item_code,'',doc, cdt, cdn, 1 , function(doc, cdt, cdn){
+refresh_field('merchandise_item')
+})
+}
+cur_frm.cscript.merchandise_qty = function(doc, cdt, cdn){
+cur_frm.cscript.calculate_merchandise_amount(doc, cdt, cdn);
+}
+cur_frm.cscript.merchandise_rate = function(doc, cdt, cdn){
+cur_frm.cscript.calculate_merchandise_amount(doc, cdt, cdn);
+}
+cur_frm.cscript.merchandise_discount_percentage = function(doc, cdt, cdn){
+cur_frm.cscript.calculate_merchandise_amount(doc, cdt, cdn);
+}
+cur_frm.cscript.calculate_merchandise_amount = function(doc, cdt, cdn){
+var d = locals[cdt][cdn]
+if(d.merchandise_discount_percentage == 100.0)
+{
+d.merchandise_amount = 0
+}
+else
+{
+if(d.merchandise_discount_percentage)
+{
+d.merchandise_amount = flt(d.merchandise_rate * (1.0 - (d.merchandise_discount_percentage / 100.0))*d.merchandise_qty)
+}
+else{
+d.merchandise_amount = flt(flt(d.merchandise_rate) *flt(d.merchandise_qty))
+}
+}
+refresh_field('merchandise_item')
+cur_frm.cscript.calculate_net_total(doc, cdt, cdn)
+}
+cur_frm.cscript.sales_invoice_items_one_remove = function(doc, cdt, cdn){
+cur_frm.cscript.calculate_net_total(doc, cdt, cdn)
+}
+cur_frm.cscript.merchandise_item_remove = function(doc, cdt, cdn){
+cur_frm.cscript.calculate_net_total(doc, cdt, cdn)
+}
+cur_frm.cscript.calculate_net_total = function(doc, cdt, cdn){
+var net_total = 0.0
+var cl=doc.sales_invoice_items_one || [ ]
+for(i=0 ;i<cl.length;i++){
+net_total += parseFloat(cl[i].tailoring_amount)
+}
+var al = doc.merchandise_item || [ ]
+for(i=0 ;i<al.length;i++){
+net_total += parseFloat(al[i].merchandise_amount)
+}
+doc.net_total_export = net_total
+refresh_field('net_total_export')
+}

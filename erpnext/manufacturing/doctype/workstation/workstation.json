@@ -62,12 +62,6 @@
    "reqd": 0
   }, 
   {
-   "fieldname": "fixed_cycle_cost", 
-   "fieldtype": "Float", 
-   "label": "Fixed Cycle Cost", 
-   "permlevel": 0
-  }, 
-  {
    "fieldname": "hour_rate_labour", 
    "fieldtype": "Float", 
    "label": "Hour Rate Labour", 
@@ -138,7 +132,7 @@
  ], 
  "icon": "icon-wrench", 
  "idx": 1, 
- "modified": "2014-08-30 10:59:07.960814", 
+ "modified": "2014-05-27 03:49:22.635046", 
  "modified_by": "Administrator", 
  "module": "Manufacturing", 
  "name": "Workstation", 

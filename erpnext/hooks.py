@@ -53,6 +53,27 @@ doc_events = {
 	"User": {
 		"validate": "erpnext.hr.doctype.employee.employee.validate_employee_role",
 		"on_update": "erpnext.hr.doctype.employee.employee.update_user_permissions"
+	},
+	"User": {
+		"validate": [
+		"erpnext.hr.doctype.employee.employee.validate_employee_role",
+		"erpnext.setup.doctype.site_master.site_master.validate_validity"
+		],
+		"on_update":[ 
+		"erpnext.hr.doctype.employee.employee.update_user_permissions",
+		"erpnext.setup.doctype.site_master.site_master.update_users"
+		],
+	},
+	"Branch": {
+		"validate" : "tools.tools_management.custom_methods.branch_validation"
+	},
+	"Sales Invoice": {
+		"validate"  : "tools.tools_management.custom_methods.merge_tailoring_items",
+		"on_submit" : "tools.tools_management.custom_methods.sales_invoice_on_submit_methods",
+		"on_cancel" : "tools.tools_management.custom_methods.delete_project_aginst_si"  
+	},
+	"Employee":{
+		"validate" : "tools.tools_management.custom_methods.update_branch"
 	}
 }
 
@@ -60,7 +81,12 @@ scheduler_events = {
 	"all": [
 		"erpnext.support.doctype.support_ticket.get_support_mails.get_support_mails",
 		"erpnext.hr.doctype.job_applicant.get_job_applications.get_job_applications",
-		"erpnext.selling.doctype.lead.get_leads.get_leads"
+		"erpnext.selling.doctype.lead.get_leads.get_leads",
+		"erpnext.setup.doctype.site_master.site_master.create_support",
+		"erpnext.setup.doctype.site_master.site_master.create_feedback",
+		"erpnext.setup.doctype.site_master.site_master.assign_support",
+		"erpnext.setup.doctype.site_master.site_master.disable_user",
+		"erpnext.setup.doctype.site_master.site_master.add_validity",
 	],
 	"daily": [
 		"erpnext.controllers.recurring_document.create_recurring_documents",

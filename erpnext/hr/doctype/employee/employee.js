@@ -50,6 +50,12 @@ erpnext.hr.EmployeeController = frappe.ui.form.Controller.extend({
 			method: "erpnext.hr.doctype.employee.employee.make_salary_structure",
 			frm: cur_frm
 		});
+	},
+
+	branch: function(doc, cdt, cdn){
+		get_server_fields('get_branch',doc.branch,'',doc,cdt,cdn,1,function(){
+			refresh_field('holiday_list')
+		})
 	}
 });
 cur_frm.cscript = new erpnext.hr.EmployeeController({frm: cur_frm});
